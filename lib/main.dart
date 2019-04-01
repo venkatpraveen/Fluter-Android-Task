@@ -43,7 +43,7 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
   TabPageSelector _tabPageSelector;
   List<Widget> subitemList = [];
   List<Cart> selectedItemsList = [];
-  int totalPrice = 0;
+  double totalPrice = 0;
 
   @override
   void initState() {
@@ -136,7 +136,7 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
                 child: new Row(
                   children: <Widget>[
                     new Text(
-                      "AED 0",
+                      "AED " + _getTotalPrice().toString(),
                       style: new TextStyle(
                           fontSize: 18.0,
                           color: const Color(0xFF000000),
@@ -154,7 +154,7 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
         ),
         new Expanded(
           child: new Container(
-            padding: new EdgeInsets.only(right: 15.0),
+            padding: new EdgeInsets.only(right: 10.0),
             child: new FlatButton(
                 key: null,
                 onPressed: null,
@@ -223,9 +223,9 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
                 key: UniqueKey(),
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: () {
-                  _onItemUnselected(index, fnblist[index], index);
+                  _onItemUnselected(index, fnblist[index]);
                 },
-                iconSize: 30.0,
+                iconSize: 32.0,
                 color: Colors.white,
               )),
               flex: 1,
@@ -233,7 +233,7 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
             new Expanded(
               child: new Container(
                 child: new Text(
-                  _getItemCount(index, fnblist[index], index).toString(),
+                  _getItemCount(index, fnblist[index]).toString(),
                   key: UniqueKey(),
                   style: new TextStyle(
                       fontSize: 18.0,
@@ -251,9 +251,9 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
                   icon: const Icon(Icons.add_circle_outline),
 //                  onPressed: _incrementCounter,
                   onPressed: () {
-                    _onItemSelected(index, fnblist[index], index);
+                    _onItemSelected(index, fnblist[index]);
                   },
-                  iconSize: 30.0,
+                  iconSize: 32.0,
                   color: Colors.white,
                 ),
               ),
@@ -344,41 +344,58 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
     );
   }
 
-  int _getItemCount(int index, Fnblist fnb, int subItemIndex) {
-    if (selectedItemsList != null) {
-      Cart cartItem = null;
+  double _getTotalPrice() {
+    if (selectedItemsList != null && selectedItemsList.length != 0) {
+      double totalPrice = 0;
       for (var i = 0; i < selectedItemsList.length; i++) {
-        cartItem = selectedItemsList[i];
-        if (cartItem.id == fnb.vistaFoodItemId) {
-          return selectedItemsList[i].quantity;
-        }
+        totalPrice += selectedItemsList[i].cost * selectedItemsList[i].quantity;
       }
+      return totalPrice;
     } else {
       return 0;
     }
-
-    return totalPrice;
   }
 
-  void _onItemSelected(int index, Fnblist fnb, int subItemIndex) {
-    if (selectedItemsList != null) {
+  int _getItemCount(int index, Fnblist fnb) {
+    if (selectedItemsList != null && selectedItemsList.length != 0) {
+      int count = 0;
+      for (var i = 0; i < selectedItemsList.length; i++) {
+//        print("cartItem.id->" + selectedItemsList[i].name);
+        if (selectedItemsList[i].id == fnb.vistaFoodItemId) {
+          count += selectedItemsList[i].quantity;
+          break;
+        }
+      }
+      return count;
+    } else {
+      return 0;
+    }
+  }
+
+  void _onItemSelected(int index, Fnblist fnb) {
+    print("_onItemSelected ->" + index.toString() + "<-");
+    if (selectedItemsList != null && selectedItemsList.length != 0) {
+      print("_onItemSelected If->" + index.toString() + "<-");
       Cart cartItem = null;
+      print("_onItemSelected Length" + selectedItemsList.length.toString());
       for (var i = 0; i < selectedItemsList.length; i++) {
         cartItem = selectedItemsList[i];
-        print("cartItem.id->" + cartItem.name);
+//        print("cartItem.id->" + cartItem.name);
         if (cartItem.id == fnb.vistaFoodItemId) {
           selectedItemsList[i].quantity++;
           setState(() {
-            totalPrice += cartItem.cost as int;
+            totalPrice += cartItem.cost;
           });
         }
       }
     } else {
-      Cart cartItem = new Cart(fnb.vistaFoodItemId, fnb.name, subItemIndex,
-          double.parse(fnb.subitems[subItemIndex].subitemPrice), 0);
+      print("_onItemSelected Else->" + index.toString() + "<-");
+      selectedItemsList = new List<Cart>();
+      Cart cartItem = new Cart(fnb.vistaFoodItemId, fnb.name, index,
+          double.parse(fnb.subitems[index].subitemPrice), 1);
       selectedItemsList.add(cartItem);
       setState(() {
-        totalPrice += cartItem.cost as int;
+        totalPrice += cartItem.cost;
       });
     }
   }
@@ -388,16 +405,24 @@ class _MainState extends State<FoodTruck> with TickerProviderStateMixin {
     _getItemCount(14, mockJSON.foodList[0].fnblist[0], 2);
   }*/
 
-  void _onItemUnselected(int index, Fnblist fnb, int subItemIndex) {
-    if (selectedItemsList != null) {
+  void _onItemUnselected(int index, Fnblist fnb) {
+    print("_onItemUnselected ->" + index.toString() + "<-");
+    if (selectedItemsList != null && selectedItemsList.length != 0) {
+      print("_onItemUnselected If->" + index.toString() + "<-");
       Cart cartItem = null;
+      print("_onItemSelected Length" + selectedItemsList.length.toString());
       for (var i = 0; i < selectedItemsList.length; i++) {
         cartItem = selectedItemsList[i];
-        print("cartItem.id->" + cartItem.name);
-        if (cartItem.id == fnb.vistaFoodItemId && cartItem.quantity > 0) {
-          selectedItemsList[i].quantity--;
+//        print("_onItemUnselected cartItem.id->" + cartItem.name);
+        if (cartItem.id == fnb.vistaFoodItemId) {
+          if (selectedItemsList[i].quantity > 1) {
+            selectedItemsList[i].quantity--;
+          } else {
+            print("_onItemUnselected else");
+            selectedItemsList.removeAt(i);
+          }
           setState(() {
-            totalPrice -= cartItem.cost as int;
+            totalPrice -= cartItem.cost;
           });
         }
       }
