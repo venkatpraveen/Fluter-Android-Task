@@ -1,4 +1,3 @@
-# Influx-Android-Task
-Flutter task
+# Fluter Implementation Using Android Framework
 
 "Food Truck" a online food cart
